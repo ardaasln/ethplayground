@@ -38,11 +38,18 @@ function processInternalTransactions(transactionBody) {
       let createdContractId = parsedResult[i].contractAddress;
       let type = parsedResult[i].type;
       let value = parsedResult[i].value;
+      let blockNumber = parsedResult[i].blockNumber;
+      let gas = parsedResult[i].gas;
+      let gasUsed = parsedResult[i].gasUsed;
+
 
       let properties = {type: type,
         amount: value/parseFloat(1.0E+18),
         isErroneous: isErroneous,
-        errCode: errCode};
+        errCode: errCode,
+        blockNumber: blockNumber,
+        gas: gas,
+        gasUsed: gasUsed};
 
       app.async.series([
         (res) => {
@@ -78,6 +85,8 @@ function processBlock(blockNumber, callback) {
   let blockFetched;
   let txn;
   let contractAddress;
+  let gasUsed;
+  let cumulativeGasUsed;
   let fromId;
   let toId;
   let unprocessedTxns = [];
@@ -107,6 +116,8 @@ function processBlock(blockNumber, callback) {
               let promiseReceipt = web3Manag.web3.eth.getTransactionReceipt(blockFetched.transactions[number]);
               promiseReceipt.then((result) => {
                 contractAddress = result.contractAddress;
+                gasUsed = result.gasUsed;
+                cumulativeGasUsed = result.cumulativeGasUsed;
                 return res();
               }).catch((error) => {
                 console.log(error);
@@ -144,6 +155,8 @@ function processBlock(blockNumber, callback) {
                 blockNumber: txn.blockNumber,
                 gasPrice: txn.gasPrice/parseFloat(1.0E+18),
                 gas: txn.gas,
+                gasUsed: gasUsed,
+                cumulativeGasUsed: cumulativeGasUsed,
                 input: txn.input};
               dbManag.createTransaction(fromId, toId, properties, res);
             },

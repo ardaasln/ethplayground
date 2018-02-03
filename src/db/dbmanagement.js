@@ -57,7 +57,7 @@ function createAddress(key, isContract, callback) {
 
 function createInternalTransaction(fromId, toId, properties, callback) {
   let session = driver.session();
-  let promise1 = session.run('MATCH (addrfrom:Address) WHERE addrfrom.key = "' + fromId + '" MATCH (addrto:Address) WHERE addrto.key = "' + toId + '" CREATE (addrfrom)-[relation:InternalTransaction{type:"' + properties.type + '", value:"' + properties.amount + '", isErroneous: "' + properties.isErroneous + '", errCode: "' + properties.errCode + '"}]->(addrto)');
+  let promise1 = session.run('MATCH (addrfrom:Address) WHERE addrfrom.key = "' + fromId + '" MATCH (addrto:Address) WHERE addrto.key = "' + toId + '" CREATE (addrfrom)-[relation:InternalTransaction{gasUsed:"' + properties.gasUsed + '",gas:"' + properties.gas + '",blockNumber:"' + properties.blockNumber + '",type:"' + properties.type + '",value:"' + properties.amount + '",isErroneous: "' + properties.isErroneous + '",errCode: "' + properties.errCode + '"}]->(addrto)');
   promise1.then((result) => {
     session.close();
     console.log('Created Internal Transaction');
@@ -71,7 +71,7 @@ function createInternalTransaction(fromId, toId, properties, callback) {
 
 function createTransaction(fromId, toId, properties, callback) {
   let session = driver.session();
-  let promise1 = session.run('MATCH (addrfrom:Address) WHERE id(addrfrom) = ' + fromId + ' MATCH (addrto:Address) WHERE id(addrto) = ' + toId + ' CREATE (addrfrom)-[relation:Transaction{key:"' + properties.key + '",amount:"' + properties.amount + '",nonce:"' + properties.nonce + '",blockNumber:"' + properties.blockNumber + '",gasPrice:"' + properties.gasPrice + '",gas:"' + properties.gas + '",input:"' + properties.input + '"}]->(addrto)');
+  let promise1 = session.run('MATCH (addrfrom:Address) WHERE id(addrfrom) = ' + fromId + ' MATCH (addrto:Address) WHERE id(addrto) = ' + toId + ' CREATE (addrfrom)-[relation:Transaction{cumulativeGasUsed:"' + properties.cumulativeGasUsed + '",gasUsed:"' + properties.gasUsed + '",key:"' + properties.key + '",amount:"' + properties.amount + '",nonce:"' + properties.nonce + '",blockNumber:"' + properties.blockNumber + '",gasPrice:"' + properties.gasPrice + '",gas:"' + properties.gas + '",input:"' + properties.input + '"}]->(addrto)');
   promise1.then((result) => {
     session.close();
     console.log('Created Transaction');
@@ -98,19 +98,20 @@ function getLatestBlockNumberInDb(callback) {
   });
 }
 
-function configureDb() {
+function configureDb(callback) {
   let session = driver.session();
   let promise1 = session.run('CREATE CONSTRAINT ON (addr:Address) ASSERT addr.key IS UNIQUE');
-  let promise2 = session.run('CREATE CONSTRAINT ON ()-[txn:Transaction]-() ASSERT txn.key IS UNIQUE');
-  let promise3 = session.run('CREATE (latestBlockNumber:LatestBlockNumber { blocknumber:0 })');
+  let promise2 = session.run('CREATE (latestBlockNumber:LatestBlockNumber { blocknumber:0 })');
 
-  Promise.all([promise1, promise2, promise3]).then((result) => {
+  Promise.all([promise1, promise2]).then((result) => {
     console.log('Configured Db Successfully');
     session.close();
+    return callback();
   }).catch((err) => {
     console.log('Problem While Configuring Db');
     session.close();
     console.log(err);
+    return callback();
   });
 }
 
