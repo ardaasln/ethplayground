@@ -5,6 +5,8 @@
  */
 
 import app from '../app';
+import _ from 'lodash';
+import async from 'async';
 import * as http from 'http';
 import * as web3Manag from '../lib/web3management';
 import * as dbManag from '../db/dbmanagement';
@@ -13,8 +15,17 @@ import {explore} from '../lib/explore';
 
 web3Manag.initWeb3();
 dbManag.initDb();
-// dbManag.configureDb();
-explore();
+if (_.isEqual(process.env.npm_package_config_configure, 'yes')) {
+  async.series([
+    (res) => {
+      dbManag.configureDb(res);
+    },
+  ], (res) => {
+    process.exit();
+  });
+} else {
+  explore();
+}
 
 /**
  * Get port from environment and store in Express.

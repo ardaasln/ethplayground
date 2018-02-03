@@ -2,6 +2,9 @@
   "name": "ethexplorer",
   "version": "1.0.0",
   "description": "Ethereum Blockchain Exploration and Transaction Graph Analysis",
+  "config": {
+    "configure": "no"
+  },
   "scripts": {
     "build": "babel src -d dist",
     "start": "nodemon src/bin/www --exec babel-node",
