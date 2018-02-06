@@ -25,12 +25,12 @@ function resendTxnForInternalTxns(txnHash) {
 }
 
 function processInternalTransactions(transactionBody) {
-  let parsedResult = transactionBody.result;
+  let parsedResult = JSON.parse(transactionBody).result;
 
   if (_.isNil(parsedResult) || _.isEmpty(parsedResult)) {
     console.log('No Internal Transactions');
   } else {
-    for (i = 0; i < parsedResult.length; i++) {
+    for (let i = 0; i < parsedResult.length; i++) {
       let isErroneous = parsedResult[i].isError;
       let errCode = parsedResult[i].errCode;
       let internalFromId = parsedResult[i].from;
@@ -51,11 +51,11 @@ function processInternalTransactions(transactionBody) {
         gas: gas,
         gasUsed: gasUsed};
 
-      app.async.series([
+      async.series([
         (res) => {
           console.log('Internal transaction type = ' + type);
           if (type === 'call') {
-            app.async.series([
+            async.series([
               (res) => {
                 dbManag.createAddress(internalToId, 0, res); // It might also be a contract but if so it should have been created previously
               },
@@ -64,7 +64,7 @@ function processInternalTransactions(transactionBody) {
               },
             ]);
           } else if (type === 'create') {
-            app.async.series([
+            async.series([
               (res) => {
                 dbManag.createAddress(createdContractId, 1, res);
               },
@@ -173,6 +173,7 @@ function processBlock(blockNumber, callback) {
                   }
                   return res();
                 } else {
+                  console.log('Response Status Is Not 200, It Is: ' + response.statusCode);
                   unprocessedTxns.push(txn.hash);
                   return res();
                 }
@@ -203,11 +204,14 @@ function explore() {
     },
     (blockNumber, res) => {
       latestBlockNumberInDb = blockNumber;
-      web3Manag.web3.eth.isSyncing()
+      /* web3Manag.web3.eth.isSyncing()
         .then((result) => {
+          console.log(result);
           endOfLoop = result.currentBlock;
           return res();
-        });
+        });*/
+      endOfLoop = 700000;
+      return res();
     },
     (res) => {
       latestBlockNumberInDb = 46000;

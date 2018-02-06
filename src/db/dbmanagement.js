@@ -46,7 +46,7 @@ function createAddress(key, isContract, callback) {
     } else {
       session.close();
       console.log('Created Address');
-      return callback(null, result.records[0]._fieldLookup['id(addr)']);
+      return callback(null, result.records[0]._fields[0]['low']);
     }
   }).catch((err) => {
     console.log('Error While Creating Address');
